@@ -13,8 +13,8 @@ fn create_html_file(name: &str) -> io::Result<File> {
 
     let mut file = File::create(file_name)?;
 
-    write!(file, "<!DOCTYPE html>\n\n");
-    write!(file, "<html>\n\n");
+    write!(file, "<!DOCTYPE html>\n\n").expect("Could not write to file");
+    write!(file, "<html>\n\n").expect("Could not write to file");
 
     return Ok(file);
 
@@ -22,12 +22,35 @@ fn create_html_file(name: &str) -> io::Result<File> {
 } 
 
 
-fn create_html_head(html_file: &File, html_name: &str) {
+/// Add more meta data as needed.
+fn create_html_head(html_file: &mut File, html_name: &str) {
+    write!(html_file, "<head>\n").expect("Could not write to file");
 
+    let title_tag: String = format!("<title>{html_name}</title>\n");
+
+    write!(html_file,"{}" ,title_tag.as_str()).expect("Could not write to file");
+    write!(html_file, "</head>\n").expect("Could not write to file");
 }
 
 
-fn create_html_body(html_file: &File) {
+fn create_html_body(html_file: &mut File, md_file_path: &str) {
+
+    write!(html_file, "<body>\n").expect("Could not write to file");
+
+    let mut contents = std::fs::read_to_string(md_file_path).unwrap();
+
+    //This will iterate through each line and do some stuff.
+    for line in contents.lines() {
+
+    }
+
+
+    write!(html_file, "</body>\n").expect("Could not write to file");
+    
+
+
+
+
 
 }
 
@@ -37,10 +60,11 @@ pub fn convert_to_html(file_path: &str) {
 
     let mut html_file = create_html_file(&file_name.as_str()).unwrap();
 
-    create_html_head(&html_file, &file_name);
+    create_html_head(&mut html_file, &file_name);
+    create_html_body(&mut html_file, &file_path);
 
     
 
 
-    write!(html_file, "</html>");
+    write!(html_file, "</html>").expect("Could not write to file");
 }
