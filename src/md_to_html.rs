@@ -5,6 +5,8 @@ use std::io::{
     Write
 };
 
+
+
 enum TextState {
     NORMAL,
     BOLD,
@@ -12,6 +14,84 @@ enum TextState {
     CODE, 
 
 }
+
+enum BlockType {
+
+    PARAGRAPH,
+    LIST,
+    HEADING,
+    HORIZONTALRULE,
+}
+
+struct Block {
+    block_type: BlockType,
+    key_item: Vec<char>,
+    text: String,
+}
+
+
+impl Block {
+    pub fn new(line: &str) -> Block{
+        let line_start: char = line.chars().next().expect("Couldn't read first character");
+
+        match line_start {
+            '#' => {
+
+            },
+            '-' => {
+
+            },
+            '0'..='9' => {
+
+            },
+            _=> { 
+
+            }
+        }
+
+        return Block {
+            block_type: BlockType::PARAGRAPH,
+            key_item: Vec::new(),
+            text: String::new(),
+        }; 
+    }
+}
+fn handle_header(header: &str, html_file: &mut File) {
+
+}
+
+fn handle_horizontal_rule(html_file: &mut File) {
+
+}
+
+fn handle_ordered_list(text: &str, html_file: &mut File) {
+
+}
+
+fn handle_unordered_list(text: &str, html_file: &mut File) {
+
+}
+
+fn handle_bold_text(text: &str, html_file: &mut File) {
+
+}
+
+fn handle_italics_text(text: &str, html_file: &mut File) {
+
+}
+
+fn handle_normal_text(text: &str, html_file: &mut File) {
+
+}
+
+fn handle_link(title: &str, link: &str, html_file: &mut File) {
+
+} 
+
+fn handle_image(alt_text: &str, image_path: &str, html_file: &mut File) {
+
+}
+
 
 fn create_html_file(name: &str) -> io::Result<File> {
 
@@ -51,11 +131,9 @@ fn create_html_body(html_file: &mut File, md_file_path: &str) {
 
     //This will iterate through each line and do some stuff.
     for line in contents.lines() {
-        let line_start: char = line.chars().next().expect("Couldn't read first character");
+        let body= Block::new(&line);
 
     }
-
-
     write!(html_file, "</body>\n").expect("Could not write to file");
     
 
