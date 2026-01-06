@@ -5,7 +5,13 @@ use std::io::{
     Write
 };
 
+enum TextState {
+    NORMAL,
+    BOLD,
+    ITALICS,
+    CODE, 
 
+}
 
 fn create_html_file(name: &str) -> io::Result<File> {
 
@@ -39,8 +45,13 @@ fn create_html_body(html_file: &mut File, md_file_path: &str) {
 
     let mut contents = std::fs::read_to_string(md_file_path).unwrap();
 
+    //Controls the state of the text we are reading.
+    let mut text_state: TextState = TextState::NORMAL;
+
+
     //This will iterate through each line and do some stuff.
     for line in contents.lines() {
+        let line_start: char = line.chars().next().expect("Couldn't read first character");
 
     }
 
