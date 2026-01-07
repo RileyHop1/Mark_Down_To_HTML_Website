@@ -6,18 +6,14 @@ use std::io::{
     Write
 };
 
-
-
 enum TextState {
     NORMAL,
     BOLD,
     ITALICS,
     CODE, 
-
 }
 
 enum BlockType {
-
     PARAGRAPH,
     LIST,
     HEADING,
@@ -25,102 +21,32 @@ enum BlockType {
 }
 
 struct Block {
-    block_type: BlockType,
-    key_item: Vec<char>,
-    text: String,
+    block_type: BlockType, // This is the type of block.
+    lines: Vec<String>, //This is all of the lines, induvidually that exist within a block.
+    last_line: String, //This will keep track of the last line in the block so there isn't overlap.
+    text: String, //This is the output.
 }
 
 
 impl Block {
-    pub fn new(line: &str) -> Block{
-        let line_start: char = line.chars().next().expect("Couldn't read first character");
-
-
-        match line_start {
-            '#' => {
-                return handle_header(line);
-
-
-            },
-            '-' => {
-                return handle_list(line);
-
-            },
-            '0'..='9' => {
-                return handle_list(line);
-
-            },
-            _=> { 
-                return handle_paragraph(line);
-
-            }
-        }
-
-         
-    }
-
-    // This will also handle the horizontal rule.
-    fn handle_list(text: &str) -> Block {
-
-        let mut interation: u32 = 0;
-        let mut state: HashMap<char, u32> = HashMap::new();
-
-        for charc in text.chars() {
-            
-            if state.contains_key(&charc) {
-
-                state.insert(charc, state.get(&charc)++);
-            }
-
-            
-
-            
-        }
+    pub fn new(line: &str) -> Block {
 
     }
 
-    fn handle_header(header: &str) -> Block {
+    ///This will figure out the type of block and what lines exist within it.
+    ///Returning a tuple with the type and a vector of all the lines in the block.
+    fn get_block_type(text: &str) -> (BlockType, vec<String>) {
 
     }
 
-    fn handle_horizontal_rule() -> Block {
+    ///This will take an inputed md vector and convert it to an html vector.
+    fn convert_md_lines_to_html(lines: vec<String>) ->vec<String> {
 
     }
 
-    fn handle_ordered_list(text: &str) -> Block {
+    fn get_block_as_html() -> String {
 
     }
-
-    fn handle_unordered_list(text: &str) -> Block {
-
-    }
-
-    fn handle_paragraph(text: &str) -> Block {
-
-    }
-    
-
-}
-
-
-fn handle_bold_text(text: &str, html_file: &mut File) {
-
-}
-
-fn handle_italics_text(text: &str, html_file: &mut File) {
-
-}
-
-fn handle_normal_text(text: &str, html_file: &mut File) {
-
-}
-
-fn handle_link(title: &str, link: &str, html_file: &mut File) {
-
-} 
-
-fn handle_image(alt_text: &str, image_path: &str, html_file: &mut File) {
-
 }
 
 
