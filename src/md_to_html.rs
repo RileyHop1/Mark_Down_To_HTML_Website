@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::path::Path;
-use std::collections::HashMap;
 use std::io::{
     self,
     Write
@@ -35,12 +34,12 @@ impl Block {
 
     ///This will figure out the type of block and what lines exist within it.
     ///Returning a tuple with the type and a vector of all the lines in the block.
-    fn get_block_type(text: &str) -> (BlockType, vec<String>) {
+    fn get_block_type(text: &str) -> (BlockType, Vec<String>) {
 
     }
 
     ///This will take an inputed md vector and convert it to an html vector.
-    fn convert_md_lines_to_html(lines: vec<String>) ->vec<String> {
+    fn convert_md_lines_to_html(lines: Vec<String>) -> Vec<String> {
 
     }
 
