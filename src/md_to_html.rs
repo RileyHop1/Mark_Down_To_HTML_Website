@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::path::Path;
+use std::collections::HashMap;
 use std::io::{
     self,
     Write
@@ -34,43 +35,73 @@ impl Block {
     pub fn new(line: &str) -> Block{
         let line_start: char = line.chars().next().expect("Couldn't read first character");
 
+
         match line_start {
             '#' => {
+                return handle_header(line);
+
 
             },
             '-' => {
+                return handle_list(line);
 
             },
             '0'..='9' => {
+                return handle_list(line);
 
             },
             _=> { 
+                return handle_paragraph(line);
 
             }
         }
 
-        return Block {
-            block_type: BlockType::PARAGRAPH,
-            key_item: Vec::new(),
-            text: String::new(),
-        }; 
+         
     }
-}
-fn handle_header(header: &str, html_file: &mut File) {
+
+    // This will also handle the horizontal rule.
+    fn handle_list(text: &str) -> Block {
+
+        let mut interation: u32 = 0;
+        let mut state: HashMap<char, u32> = HashMap::new();
+
+        for charc in text.chars() {
+            
+            if state.contains_key(&charc) {
+
+                state.insert(charc, state.get(&charc)++);
+            }
+
+            
+
+            
+        }
+
+    }
+
+    fn handle_header(header: &str) -> Block {
+
+    }
+
+    fn handle_horizontal_rule() -> Block {
+
+    }
+
+    fn handle_ordered_list(text: &str) -> Block {
+
+    }
+
+    fn handle_unordered_list(text: &str) -> Block {
+
+    }
+
+    fn handle_paragraph(text: &str) -> Block {
+
+    }
+    
 
 }
 
-fn handle_horizontal_rule(html_file: &mut File) {
-
-}
-
-fn handle_ordered_list(text: &str, html_file: &mut File) {
-
-}
-
-fn handle_unordered_list(text: &str, html_file: &mut File) {
-
-}
 
 fn handle_bold_text(text: &str, html_file: &mut File) {
 
