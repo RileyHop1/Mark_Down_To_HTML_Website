@@ -22,20 +22,63 @@ enum BlockType {
 struct Block {
     block_type: BlockType, // This is the type of block.
     lines: Vec<String>, //This is all of the lines, induvidually that exist within a block.
-    last_line: String, //This will keep track of the last line in the block so there isn't overlap.
+    last_line: u32, //This will the last index that the iterator moved to.
     text: String, //This is the output.
 }
 
 
+//Working theory is to put each line into a vector, so we can keep better track
+//Of the position within text we are at.
+//This will allow us some flexiblity with how we move through the files.
 impl Block {
-    pub fn new(line: &str) -> Block {
+    pub fn new(text: &Vec<&str>,starting_index: u32) -> Block {
+        
+        let type_and_vstring: (BlockType, Vec<String>) = get_block_type(&text, starting_index);
 
     }
 
     ///This will figure out the type of block and what lines exist within it.
     ///Returning a tuple with the type and a vector of all the lines in the block.
-    fn get_block_type(text: &str) -> (BlockType, Vec<String>) {
+    fn get_block_type(text: &Vec<&str>,starting_index: usize) -> (BlockType, Vec<String>) {
 
+        let mut current_index:usize = starting_index;
+
+        //This will grab the current block type that we are within
+        let current_block:BlockType = {
+
+            let line: &str = text[starting_index];
+
+            if line.starts_with("#") {
+
+                let mut chars = line.chars();
+
+                loop {
+                    match chars.next() {
+                        Some('#') => continue,            
+                        Some(' ') => break BlockType::HEADING,   
+                        Some(_) => break BlockType::PARAGRAPH,  
+                        None => break BlockType::PARAGRAPH,     
+                    }
+                }
+
+            } else if line.starts_with("- ") {
+
+                BlockType::LIST
+           } else if line == "---" {
+               BlockType::HORIZONTALRULE
+           } else {
+
+            BlockType::PARAGRAPH
+           }
+        };
+        
+        //This will find how many lines complie with the block of the previous lines.
+        loop {
+
+            
+
+
+        }
     }
 
     ///This will take an inputed md vector and convert it to an html vector.
@@ -92,11 +135,6 @@ fn create_html_body(html_file: &mut File, md_file_path: &str) {
     }
     write!(html_file, "</body>\n").expect("Could not write to file");
     
-
-
-
-
-
 }
 
 pub fn convert_to_html(file_path: &str) {
