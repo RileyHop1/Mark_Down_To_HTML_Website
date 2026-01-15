@@ -37,16 +37,8 @@ impl Block {
 
     }
 
-    ///This will figure out the type of block and what lines exist within it.
-    ///Returning a tuple with the type and a vector of all the lines in the block.
-    fn get_block_type(text: &Vec<&str>,starting_index: usize) -> (BlockType, Vec<String>) {
+    fn line_block(line: String) -> BlockType {
 
-        let mut current_index:usize = starting_index;
-
-        //This will grab the current block type that we are within
-        let current_block:BlockType = {
-
-            let line: &str = text[starting_index];
 
             if line.starts_with("#") {
 
@@ -70,15 +62,37 @@ impl Block {
 
             BlockType::PARAGRAPH
            }
-        };
+    }
+
+    ///This will figure out the type of block and what lines exist within it.
+    ///Returning a tuple with the type and a vector of all the lines in the block.
+    fn get_block_type(text: &Vec<&str>,starting_index: usize) -> (BlockType, Vec<String>) {
+
+        let mut current_index:usize = starting_index;
+        let mut lines_in_block:Vec<String> = Vec::new();
+
         
+        //This will grab the current block type that we are within
+        let block:BlockType = line_block(text[starting_index]);
+
         //This will find how many lines complie with the block of the previous lines.
         loop {
+            lines_in_block.push(text[current_index].to_string());
 
+            current_index = current_index + 1;
+
+            if current_index > text.len() - 1 {
+                return (block, lines_in_block);
+            }
+
+            let current_block:BlockType =  line_block(text[current_index]);
             
-
-
+            if current_block != block {
+                return (block, lines_in_block);
+            }
+            
         }
+
     }
 
     ///This will take an inputed md vector and convert it to an html vector.
