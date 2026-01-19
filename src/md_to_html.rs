@@ -27,6 +27,7 @@ struct Block {
 }
 
 
+#[derive(PartialEq, Eq, Debug)]
 enum LineType {
     PARAGRAPH,
     UNORDED_LIST,
@@ -44,9 +45,9 @@ struct MdLine {
 //Of the position within text we are at.
 //This will allow us some flexiblity with how we move through the files.
 impl Block {
-    pub fn new(text: &Vec<&str>,starting_index: u32) -> Block {
+    pub fn new(text: &Vec<&str>,starting_index: usize) -> Block {
         
-        let type_and_vstring: (BlockType, Vec<MdLine>) = Block::get_block_type(&text, starting_index as usize);
+        let type_and_vstring: (BlockType, Vec<MdLine>) = Block::get_block_type(&text, starting_index);
 
         return Block {
             block_type: type_and_vstring.0,
@@ -219,6 +220,85 @@ impl Block {
     }
 }
 
+fn render_block_to_html(html_file: &mut File, block_type: BlockType, md_block: Vec<MdLine>) {
+
+    match block_type {
+        BlockType::HEADING => {
+
+            for head in md_block {
+                if let LineType::HEADING(level)= head.line_type {
+
+                    writeln!(html_file, "<h{}>{}</h{}>",level, head.line, level).unwrap();
+                }
+            }
+
+
+        },
+        BlockType::LIST => {
+            let mut prev_tag = match md_block.get(0).unwrap().line_type {
+                    LineType::ORDERED_LIST(n) => {
+
+                        writeln!(html_file,"<ol start ={}>", n).unwrap();
+                        "ol"
+                    },
+                    _=> {
+                        writeln!(html_file,"<ul>").unwrap();
+                        "ul"
+                    }, //Should in theory always be one of the two options 
+            };
+
+            for item in md_block {
+                let cur_tag = match item.line_type {
+                    LineType::UNORDED_LIST => "ul",
+                    LineType::ORDERED_LIST(_) => "ol",
+                    _ => continue, // Should theoretically not happen
+                };
+
+                if prev_tag == cur_tag  {
+                    match item.line_type {
+                        LineType::ORDERED_LIST(_) => writeln!(html_file,"<li>{}</li>", item.line).unwrap(),   
+                        _=> writeln!(html_file,"<li>{}</li>", item.line).unwrap(),
+                    }
+                } else {
+                    writeln!(html_file,"</{}>", prev_tag).unwrap();
+                    match item.line_type {
+                        LineType::ORDERED_LIST(n) => {
+
+                            writeln!(html_file,"<ol start ={}>", n).unwrap();
+                        },
+                        _=> {
+                            writeln!(html_file,"<ul>").unwrap();
+                        },  
+                    };
+                    match item.line_type {
+                        LineType::ORDERED_LIST(_) => writeln!(html_file,"<li>{}</li>", item.line).unwrap(),   
+                        _=> writeln!(html_file,"<li>{}</li>", item.line).unwrap(),
+                    }
+                    prev_tag = cur_tag;
+                }
+
+            }
+            writeln!(html_file,"</{}>", prev_tag).unwrap();
+
+        },
+        BlockType::HORIZONTALRULE => {
+
+            writeln!(html_file, "<hr />").unwrap();
+        },
+        BlockType::PARAGRAPH => {
+
+            writeln!(html_file, "<p>").unwrap();
+            for line in md_block {
+                writeln!(html_file,"{}", line.line).unwrap();
+            }
+            writeln!(html_file, "</p>").unwrap();
+
+        },
+
+    }
+
+}
+
 
 fn create_html_file(name: &str) -> io::Result<File> {
 
@@ -255,10 +335,21 @@ fn create_html_body(html_file: &mut File, md_file_path: &str) {
     //Controls the state of the text we are reading.
     let mut text_state: TextState = TextState::NORMAL;
 
+    let all_lines: Vec<&str> = contents.lines().collect();
+    let mut current_index: usize = 0;
+
 
     //This will iterate through each line and do some stuff.
-    for line in contents.lines() {
-        let body= Block::new(&line);
+    while current_index < all_lines.len() {
+        let body= Block::new(&all_lines, current_index);
+
+        let md_block = body.lines;
+        let block_type = body.block_type;
+        current_index += md_block.len();
+
+        render_block_to_html(html_file, block_type, md_block);
+
+
 
     }
     write!(html_file, "</body>\n").expect("Could not write to file");

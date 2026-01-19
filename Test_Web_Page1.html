@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Test_Web_Page1</title>
+</head>
+<body>
+<h1>My Markdown Parser Test</h1>
+<p>
+This is a standard paragraph to test if the grouping logic correctly identifies multiple lines as a single block.
+It also tests if newlines are handled gracefully.
+
+</p>
+<hr />
+<p>
+
+</p>
+<h2>List Testing</h2>
+<ul>
+<li>First unordered item</li>
+<li>Second unordered item</li>
+</ul>
+<ol start =1>
+<li>Switched to ordered list item 1</li>
+<li>Ordered list item 2</li>
+</ol>
+<ul>
+<li>Switched back to unordered</li>
+<li>Another bullet</li>
+</ul>
+<p>
+
+</p>
+<h3>Advanced Numbering</h3>
+<ol start =10>
+<li>This list starts at ten</li>
+<li>This should test your 'level' digit-parsing logic</li>
+<li>And the 'u32' conversion</li>
+</ol>
+<p>
+
+</p>
+<hr />
+<p>
+
+</p>
+<h4>Final Header Test</h4>
+<p>
+This is the end of the document.
+</p>
+</body>
+</html>
