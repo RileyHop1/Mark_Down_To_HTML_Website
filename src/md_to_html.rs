@@ -1,3 +1,4 @@
+use core::num;
 use std::fs::File;
 use std::path::Path;
 use std::io::{
@@ -12,6 +13,7 @@ enum TextState {
     CODE, 
 }
 
+#[derive(PartialEq, Eq, Debug)]
 enum BlockType {
     PARAGRAPH,
     LIST,
@@ -21,11 +23,22 @@ enum BlockType {
 
 struct Block {
     block_type: BlockType, // This is the type of block.
-    lines: Vec<String>, //This is all of the lines, induvidually that exist within a block.
-    last_line: u32, //This will the last index that the iterator moved to.
-    text: String, //This is the output.
+    lines: Vec<MdLine>, //This is all of the lines, induvidually that exist within a block.
 }
 
+
+enum LineType {
+    PARAGRAPH,
+    UNORDED_LIST,
+    ORDERED_LIST(u32),
+    HEADING(u32),
+    HORIZONTALRULE,
+}
+
+struct MdLine {
+    line: String,
+    line_type: LineType,
+}
 
 //Working theory is to put each line into a vector, so we can keep better track
 //Of the position within text we are at.
@@ -33,74 +46,175 @@ struct Block {
 impl Block {
     pub fn new(text: &Vec<&str>,starting_index: u32) -> Block {
         
-        let type_and_vstring: (BlockType, Vec<String>) = get_block_type(&text, starting_index);
+        let type_and_vstring: (BlockType, Vec<MdLine>) = Block::get_block_type(&text, starting_index as usize);
+
+        return Block {
+            block_type: type_and_vstring.0,
+            lines: type_and_vstring.1
+        }
+
 
     }
 
-    fn line_block(line: String) -> BlockType {
+    fn line_type_to_block_type(the_type: &LineType) -> BlockType {
+        match the_type {
+            LineType::PARAGRAPH => BlockType::PARAGRAPH,
+
+            LineType::UNORDED_LIST => BlockType::LIST,
+
+            LineType::ORDERED_LIST(n) => BlockType::LIST,
+
+            LineType::HEADING(level) => BlockType::HEADING,
+
+            LineType::HORIZONTALRULE => BlockType::HORIZONTALRULE,
+        }
+    }
+
+    fn line_block(line: &str) -> MdLine {
 
 
             if line.starts_with("#") {
 
                 let mut chars = line.chars();
-
-                loop {
-                    match chars.next() {
-                        Some('#') => continue,            
-                        Some(' ') => break BlockType::HEADING,   
-                        Some(_) => break BlockType::PARAGRAPH,  
-                        None => break BlockType::PARAGRAPH,     
+                let mut level: u32 = 0;
+                let line_type = {
+                    loop {
+                        match chars.next() {
+                            Some('#') => level += 1,            
+                            Some(' ') => break LineType::HEADING(level),   
+                            Some(_) => break LineType::PARAGRAPH,  
+                            None => break LineType::PARAGRAPH,     
+                        }
                     }
-                }
 
+                };
+
+                return match line_type {
+                    LineType::HEADING(_) => {
+                        // It's a heading, so we strip the prefix. 
+                        // level + 1 accounts for the '#'s and the space.
+                        let clean_text = line.chars().skip((level + 1) as usize).collect();
+                        MdLine { 
+                            line: clean_text, 
+                            line_type 
+                        }
+                    }
+                    _ => {
+                        MdLine { 
+                            line: line.to_string(), 
+                            line_type: LineType::PARAGRAPH 
+                        }
+                    }
+                };
+
+            } else if line.chars().next()
+                .map_or(false, |c| c.is_ascii_digit()) {
+
+                let mut chars = line.chars();
+                let mut level: u32 = 0;
+                let mut has_dot= false;
+                let line_type = {
+                    loop {
+                        match chars.next() {
+                            Some(c) if c.is_ascii_digit() => {
+                                if has_dot {
+                                    break LineType::PARAGRAPH;
+                                }
+
+                                level += 1;
+                            },            
+                            Some('.') => {
+                                if has_dot || level == 0{
+                                    break LineType::PARAGRAPH;
+                                }
+                                has_dot = true;
+                            },
+                            Some(' ') => {
+
+                                let num_str: String = line.chars().take(level as usize).collect();
+                                let num = num_str.parse::<u32>().unwrap_or(1);
+                                break LineType::ORDERED_LIST(num);
+                            },   
+                            Some(_) => break LineType::PARAGRAPH,  
+                            None => break LineType::PARAGRAPH,     
+                        }
+                    }
+
+                };
+
+                return match line_type {
+                    LineType::ORDERED_LIST(_) => {
+                        // It's a heading, so we strip the prefix. 
+                        // level + 1 accounts for the '#'s and the space.
+                        let clean_text = line.chars().skip((level + 2) as usize).collect();
+                        MdLine { 
+                            line: clean_text, 
+                            line_type 
+                        }
+                    }
+                    _ => {
+                        MdLine { 
+                            line: line.to_string(), 
+                            line_type: LineType::PARAGRAPH 
+                        }
+                    }
+                };
             } else if line.starts_with("- ") {
-
-                BlockType::LIST
+                let clean_text = line.chars().skip(2).collect();
+                MdLine { 
+                    line: clean_text, 
+                    line_type: LineType::UNORDED_LIST,
+                }
            } else if line == "---" {
-               BlockType::HORIZONTALRULE
+                MdLine { 
+                    line: line.to_string(), 
+                    line_type: LineType::HORIZONTALRULE,
+                }
            } else {
-
-            BlockType::PARAGRAPH
+                MdLine { 
+                    line: line.to_string(), 
+                    line_type: LineType::PARAGRAPH,
+                }
            }
     }
 
     ///This will figure out the type of block and what lines exist within it.
     ///Returning a tuple with the type and a vector of all the lines in the block.
-    fn get_block_type(text: &Vec<&str>,starting_index: usize) -> (BlockType, Vec<String>) {
+    fn get_block_type(text: &Vec<&str>,starting_index: usize) -> (BlockType, Vec<MdLine>) {
 
         let mut current_index:usize = starting_index;
-        let mut lines_in_block:Vec<String> = Vec::new();
+        let mut lines_in_block:Vec<MdLine> = Vec::new();
 
         
-        //This will grab the current block type that we are within
-        let block:BlockType = line_block(text[starting_index]);
+        let first_line = Block::line_block(text[starting_index]);
 
+        //This will grab the current block type that we are within
+        let block:BlockType = Block::line_type_to_block_type(&first_line.line_type);
+
+        lines_in_block.push(first_line);
+        current_index = current_index + 1;
         //This will find how many lines complie with the block of the previous lines.
         loop {
-            lines_in_block.push(text[current_index].to_string());
+            
 
-            current_index = current_index + 1;
+            let next_line = match text.get(current_index).copied() {
+                Some(line) => line,
+                None => return (block, lines_in_block), 
+            };
 
-            if current_index > text.len() - 1 {
-                return (block, lines_in_block);
-            }
+            let current_line = Block::line_block(next_line); 
 
-            let current_block:BlockType =  line_block(text[current_index]);
+            let current_block:BlockType =  Block::line_type_to_block_type(&current_line.line_type);
             
             if current_block != block {
+                
                 return (block, lines_in_block);
             }
+
+            lines_in_block.push(current_line);
+            current_index = current_index + 1;
             
         }
-
-    }
-
-    ///This will take an inputed md vector and convert it to an html vector.
-    fn convert_md_lines_to_html(lines: Vec<String>) -> Vec<String> {
-
-    }
-
-    fn get_block_as_html() -> String {
 
     }
 }
